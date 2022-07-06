@@ -5,18 +5,19 @@
 
 use std::fs::{self, OpenOptions};
 use std::io::{stdin, Write};
+use std::cell::RefCell;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Person {
-    name: String,
-    address: String,
+    name: RefCell<&'static str>,
+    address: RefCell<&'static str>,
 }
 
 impl Person {
-    pub fn new(inputName: String, inputAddress: String) -> Self {
+    pub fn new(inputName: &'static str, inputAddress: &'static str) -> Self {
         Person { 
-            name: inputName, 
-            address: inputAddress,
+            name: RefCell::new(inputName), 
+            address: RefCell::new(inputAddress),
         }
     }
 }
@@ -32,15 +33,16 @@ impl AddressBook {
     }
 
     pub fn openBook(&mut self, fileName: &str) {
-        let fileData = fs::read_to_string(fileName).expect("Searching and reading the file error");
+        let fileData = fs::read_to_string(fileName)
+            .expect("Searching and reading the file error");
         let mut data = fileData.as_str();
 
         while data.chars().count() > 0 {
             let nameSlice = data.find('\t').unwrap();
-            let name = data[..nameSlice].to_string();
+            let name = &data[..nameSlice];
             
             let addSlice = data.find('\n').unwrap();
-            let address = data[nameSlice + 1..addSlice].to_string();
+            let address = &data[nameSlice + 1..addSlice];
 
             &mut self.addressList.push(Person::new(name, address));
 
@@ -49,10 +51,13 @@ impl AddressBook {
     } 
 
     pub fn saveBook(&self, fileName: &str) {
-        let mut file = OpenOptions::new().write(true).open(fileName).expect("saving the data error");
+        let mut file = OpenOptions::new()
+            .write(true)
+            .open(fileName)
+            .expect("saving the data error");
         
         for data in &self.addressList {
-            let writing = format!("{}\t{}\n", data.name, data.address);
+            let writing = format!("{}\t{}\n", data.name.borrow(), data.address.borrow());
             file.write(writing.as_bytes()).expect("writing error");
         }
 
@@ -61,28 +66,32 @@ impl AddressBook {
 
     pub fn showAllPerson(&self) {
         for person in &self.addressList {
-            println!("{} : {}", person.name, person.address);
+            println!("{} : {}", person.name.borrow(), person.address.borrow());
         }
     }
 
-    pub fn addPerson(&mut self, person: &Person) {
-        &mut self.addressList.push(*person);
+    pub fn addPerson(&mut self, person: Person) {
+        &mut self.addressList.push(person);
     }
 
     pub fn delPerson(&mut self, person: &Person) {
-        &mut self.addressList.retain(|&x| &x != person);
-        println!("[{} : {}] is deleted", person.name, person.address);
+        &mut self.addressList.retain(|x| x != person);
+        println!("[{} : {}] is deleted", person.name.borrow(), person.address.borrow());
     }
 
     pub fn updateAddress(&mut self, personFrom: &Person, personTo: &Person) {
 
     }
 
-    pub fn findPerson(&self, findPerson: &String) {
+    pub fn findPerson(&self, findPerson: &str) {
         let mut exitence: u8 = 0;
         for person in &self.addressList {
-            if &person.name == findPerson {
-                println!("[name: {}, address: {}] is in the addressbook", &person.name, &person.address);
+            if person.name == RefCell::new(findPerson) {
+                println!(
+                    "[name: {}, address: {}] is in the addressbook", 
+                    &person.name.borrow(), 
+                    &person.address.borrow()
+                );
             } 
             exitence += 1;
         }
