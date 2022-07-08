@@ -1,361 +1,23 @@
-// 1. 주소록 작성하기.
-// 1.1 이름, 주소를 txt 파일에 입력, 출력, 내용 추가, 삭제, 찾기 기능을 구현
+/// 1. 주소록 작성하기.
+/// 1.1 이름, 주소를 txt 파일에 입력, 출력, 내용 추가, 삭제, 찾기 기능을 구현
+/// 실행 : cargo run --pacakage addressbook 
+/// 필요 개선 사항
+/// a. 모든 handler 함수는 addressBook 을 ref 또는 mut ref 로 매개변수를 받음. 
+///    -> handler 에 추가 sub 함수가 있을 경우, 해당 매개변수 처리가 복잡해짐. 
+///       sharded memory 를 통해 이를 해결할수 있을 듯 하지만, 아직 잘 모르겠음. 
+/// b. data contol 의 가장 작은 단위는 person 의 필드로 모두 String 으로 받고 있지만, 
+///    때문에 ownership 문제가 발생하거나 clone 을 남발해야 할 경우가 발생될 수 있음. 
+///    -> RC, RefCell 등의 shared reference 를 통해 value 를 수정할 수 있는 스마트 포인터를 써서 
+///       해결 가능할 것으로 보임.  
 
-#![allow(non_snake_case)]
-
-use std::fs::{self, OpenOptions};
-use std::io::{stdin, Write};
-//use std::cell::RefCell;
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Person {
-    name: String,
-    address: String,
-}
-
-impl Person {
-    pub fn new(inputName: String, inputAddress: String) -> Self {
-        Person { 
-            name: inputName, 
-            address: inputAddress,
-        }
-    }
-
-    pub fn showPerson(&self) {
-        println!("name : {},  address : {}]", &self.name, &self.address);
-    }
-}
-
-#[derive(Debug)]
-pub struct AddressBook {
-    db: Vec<Person>,
-}
-
-impl AddressBook {
-    pub fn new() -> Self {
-        AddressBook { db: Vec::<Person>::new() }
-    }
-
-    pub fn openBook (&mut self, fileName: &str) {
-        let mut fileData: String = fs::read_to_string(fileName)
-            .expect("Searching and reading the file error");
-    
-        while fileData.chars().count() > 0 {
-            let nameSlice = fileData.find('\t').unwrap();
-            let name = fileData[..nameSlice].to_string();
-            
-            let addSlice = fileData.find('\n').unwrap();
-            let address = fileData[nameSlice + 1..addSlice].to_string();
-
-            &mut self.db.push(Person::new(name, address));
-
-            fileData = fileData[addSlice + 1 ..].to_string();
-        }
-    } 
-
-    pub fn saveBook(&self, fileName: &str) {
-        println!("6. Save the update to a file.");
-        let mut file = OpenOptions::new()
-            .write(true)
-            .open(fileName)
-            .expect("saving the data error");
-        
-        for data in &self.db {
-            let writing = format!("{}\t{}\n", data.name, data.address);
-            file.write(writing.as_bytes()).expect("writing error");
-        }
-
-        println!("The file is updated!");
-    }
-
-    pub fn showAllPerson(&self) {
-        println!("3. Check the all memorized personal information.");
-        for person in &self.db {
-            println!("{} : {}", &person.name, &person.address);
-        }
-    }
-
-    pub fn pushPerson(&mut self, person: Person) {
-        &mut self.db.push(person.clone());
-        println!("[{} : {}] is added", &person.name, &person.address);
-    }
-
-    pub fn delPerson(&mut self, person: &Person) {
-        &mut self.db.retain(|x| x != person);
-        println!("[{} : {}] is deleted", person.name, person.address);
-    }
-
-    pub fn updateAddress(&mut self, name: String, oldAddress: String, newAddress: String) {
-        for person in &mut self.db {
-            if person.name == name && person.address == oldAddress {
-                person.address = newAddress;
-                println!("[{} : {}] is updated", person.name, person.address);
-                break;
-            }
-        }
-    }
-
-    pub fn findName(&self, name: String) {
-        let mut existence: u8 = 0;
-        for person in &self.db {
-            if person.name == name {
-                println!(
-                    "[name: {}, address: {}]", 
-                    &person.name, 
-                    &person.address
-                );
-                existence += 1;
-            } 
-        }
-        if existence == 0 {
-            println!("{} is not in the addressbook", &name);
-        } else {
-            println!("Find : {}", existence);
-        }
-        
-    }
-
-    pub fn findAddress(&self, address: String) {
-        let mut existence: u8 = 0;
-        for person in &self.db {
-            if person.address == address {
-                println!(
-                    "[name: {}, address: {}]", 
-                    &person.name, 
-                    &person.address
-                );
-                existence += 1;
-            }
-        }
-        if existence == 0 {
-            println!("{} is not in to addressbook", &address);
-        } else {
-            println!("Find : {}", existence);
-        }
-        
-    }
-
-    pub fn is_included(&self, name: &String, address: &String) -> bool {
-        let mut existence = false;
-        for person in &self.db {
-            if &person.name == name && &person.address == address {
-                existence = true;
-                return existence
-            } 
-        }
-        existence
-    }
-
-
-}
-
-pub fn inputName() -> String {
-    println!("Please input your name.");
-    let mut nameBuffer = String::new();
-    let stdinName = stdin().read_line(&mut nameBuffer).expect("input error");
-    nameBuffer[..nameBuffer.len() - 2].to_string()
-}
-
-pub fn inputAddress() -> String {
-    println!("Please input an address.");
-    let mut addrBuffer = String::new();
-    let stdinAddr = stdin().read_line(&mut addrBuffer).expect("input error");
-    addrBuffer[..addrBuffer.len() - 2].to_string()
-}
-
-pub fn inputNumber() -> u8 {
-    let inputError: u8 = 99;
-
-    let mut numBuffer = String::new();
-    let stdinNum = stdin().read_line(&mut numBuffer).expect("input error");
-    let orderNum = numBuffer[..numBuffer.len() - 2].parse::<u8>();
-
-    match orderNum {
-        Ok(orderNum) => return orderNum,
-        Err(error) => return inputError,
-    }
-}
-
-pub fn showMenu() {
-    println!("-----------------------------------------------------------------"); 
-    println!("Please input the order number.");
-    println!(" 0 : return to main menu without update.");
-    println!(" 1 : confirm to save this change and return to main menu.");
-    println!(" 2 : confirm to save this change and update inpormation more.");
-    println!(" 3 : something wrong about the information. Input again without saving.");
-    println!("-----------------------------------------------------------------"); 
-}
-
-pub fn addPerson(addressBook : &mut AddressBook) {
-    println!("1. Add a new personal infomation.");
-
-    let mut dataInputAgain = true;
-    while dataInputAgain {
-        let name = inputName();
-        let address = inputAddress();    
-        if addressBook.is_included(&name, &address) {
-            println!("The same name and address information is already in the AddressBook");
-            println!("Please input the 0 if you want to back to main menu or input any others.");
-
-            let order = inputNumber();
-            match inputNumber() {
-                0 => dataInputAgain = false,
-                _ => {},
-            }
-
-        } else {        
-            let mut orderInputAgain = true;
-            while orderInputAgain {
-                println!("Prease check the input information.");
-
-                // 만약 아래 variable 선언이 while 문 앞에 있다면, 에러 발생
-                // (아마도) 내부 while 문이 반복되는 상항에서, 기존의 newPerson ownership 이 move 해버린 상태에서
-                // 다시 선언하지 않고 돌아기기 때문(인듯)
-                // 추가로 while 문 내부로 넣었지만, name, address 를 그냥 가져오게되면, 
-                // name, address ownership 이 반복문 실행 시, 1회 사용으로 버려지기 때문에 clone 사용 (해야 하는듯)
-                let newPerson = Person::new(name.clone(), address.clone()); // 
-
-                newPerson.showPerson();
-                showMenu();
-                match inputNumber() {
-                    0 => {
-                        dataInputAgain = false;
-                        orderInputAgain = false;
-                        },
-                    1 => {
-                        addressBook.pushPerson(newPerson);
-                        dataInputAgain = false;
-                        orderInputAgain = false;
-                    },
-                    2 => {
-                        addressBook.pushPerson(newPerson);
-                        orderInputAgain = false;
-                    },
-                    3 => orderInputAgain = false,
-                    _ => println!("Please enter one vaild number (0 - 3)."),
-                }                    
-            }
-        }    
-    }
-}
-
-
-pub fn searchPerson(addressBook : &AddressBook) {
-    println!("2. Search a personal information in the data.");
-    let mut dataInputAgain = true;
-    while dataInputAgain {
-        println!("Please select the searching keyword.");
-        println!("0: return to main menu, 1: Name,  2: Address");
-        let order = inputNumber();
-
-        match order {
-            0 => dataInputAgain = false,
-            1 => {
-                let findPerson = inputName();
-                addressBook.findName(findPerson)
-            },
-            2 => {
-                let findPerson = inputAddress();
-                addressBook.findAddress(findPerson)
-            },
-            _ => println!("Please enter one vaild number (0 - 2).")
-        }
-    }
-}
-
-pub fn removePerson(addressBook: &mut AddressBook) {
-    println!("4. Remove one memorized personal information.");
-    let mut dataInputAgain = true;
-    while dataInputAgain {
-        let name = inputName();
-        let address = inputAddress();
-
-        if !addressBook.is_included(&name, &address) {
-            println!("This is not in the AddressBook.");
-            println!("Please input the 0 if you want to back to main menu or again input any others.");
-
-            match inputNumber() {
-                0 => dataInputAgain = false,
-                _ => {},
-            }
-        } else {
-            let rmPerson = Person::new(name, address); 
-            
-            let mut orderInputAgain = true;
-            while orderInputAgain {
-                rmPerson.showPerson();
-                showMenu();
-
-                match inputNumber() {
-                    0 => {
-                        dataInputAgain = false;
-                        orderInputAgain = false;
-                    },
-                    1 => {
-                        addressBook.delPerson(&rmPerson);
-                        dataInputAgain = false;
-                        orderInputAgain = false;
-                    },
-                    2 => {
-                        addressBook.delPerson(&rmPerson);
-                        orderInputAgain = false;
-                    },
-                    3 => orderInputAgain = false,
-                    _ => println!("Please enter one vaild number (0 - 3)."),
-                }
-            }
-        }
-    }
-}
-
-pub fn changeAddress (addressBook: &mut AddressBook) {
-    println!("5. Change one memorized personal information(address).");
-
-    let mut dataInputAgain = true;
-    while dataInputAgain {
-        let name = inputName();
-        let oldAddress = inputAddress();
-
-        if !addressBook.is_included(&name, &oldAddress) {
-            println!("This is not in the AddressBook.");
-            println!("Please input the 0 if you want to back to main menu or again input any others.");
-
-            match inputNumber() {
-                0 => dataInputAgain = false,
-                _ => {},
-            }
-        } else {
-            println!("Please input new address to save.");
-            let newAddress = inputAddress();
-
-            let mut orderInputAgain = true;
-            while orderInputAgain {
-                showMenu();
-                match inputNumber() {
-                    0 => {
-                        dataInputAgain = false;
-                        orderInputAgain = false;
-                    },
-                    1 => {
-                        addressBook.updateAddress(name.clone(), oldAddress.clone(), newAddress.clone());
-                        dataInputAgain = false;
-                        orderInputAgain = false;
-                    },
-                    2 => {
-                        addressBook.updateAddress(name.clone(), oldAddress.clone(), newAddress.clone());
-                        orderInputAgain = false;
-                    },
-                    3 => orderInputAgain = false,
-                    _ => println!("Please enter one vaild number (0 - 3)."),
-                }
-            } 
-        }
-    }
-}
+use addressbook::handlers;
+use addressbook::data_control_models::in_memory_structs;
 
 fn main() {
-    let fileName = "addressbook/src/book.txt";
-    let mut addressBook = AddressBook::new();
+    #![allow(non_snake_case)]
+    
+    let fileName = "addressbook/src/statics/db/book.txt";
+    let mut addressBook = in_memory_structs::AddressBook::new();
     addressBook.openBook(fileName);
 
     loop {
@@ -371,12 +33,12 @@ fn main() {
         println!("-----------------------------------------------------------------");   
         println!("Please input order number. (0 - 6)");
 
-        match inputNumber() {
-            1 => addPerson(&mut addressBook),
-            2 => searchPerson(&addressBook),
+        match handlers::inputNumber() {
+            1 => handlers::addPerson(&mut addressBook),
+            2 => handlers::searchPerson(&addressBook),
             3 => addressBook.showAllPerson(),
-            4 => removePerson(&mut addressBook),
-            5 => changeAddress(&mut addressBook),
+            4 => handlers::removePerson(&mut addressBook),
+            5 => handlers::changeAddress(&mut addressBook),
             6 => addressBook.saveBook(fileName),
             0 => {
                 println!("Bye!!");
@@ -384,7 +46,6 @@ fn main() {
             },
             _ => println!("Please input one vaild number (0 - 6)."),
         }
-
     }
 }
 
