@@ -7,7 +7,7 @@ use std::fs::{self, OpenOptions};
 use std::io::{stdin, Write};
 //use std::cell::RefCell;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Person {
     name: String,
     address: String,
@@ -54,6 +54,7 @@ impl AddressBook {
     } 
 
     pub fn saveBook(&self, fileName: &str) {
+        println!("6. Save the update to a file.");
         let mut file = OpenOptions::new()
             .write(true)
             .open(fileName)
@@ -68,13 +69,15 @@ impl AddressBook {
     }
 
     pub fn showAllPerson(&self) {
+        println!("3. Check the all memorized personal information.");
         for person in &self.db {
-            println!("{} : {}", person.name, person.address);
+            println!("{} : {}", &person.name, &person.address);
         }
     }
 
     pub fn pushPerson(&mut self, person: Person) {
-        &mut self.db.push(person);
+        &mut self.db.push(person.clone());
+        println!("[{} : {}] is added", &person.name, &person.address);
     }
 
     pub fn delPerson(&mut self, person: &Person) {
@@ -82,8 +85,14 @@ impl AddressBook {
         println!("[{} : {}] is deleted", person.name, person.address);
     }
 
-    pub fn updateAddress(&mut self, personFrom: &Person, personTo: &Person) {
-
+    pub fn updateAddress(&mut self, name: String, oldAddress: String, newAddress: String) {
+        for person in &mut self.db {
+            if person.name == name && person.address == oldAddress {
+                person.address = newAddress;
+                println!("[{} : {}] is updated", person.name, person.address);
+                break;
+            }
+        }
     }
 
     pub fn findName(&self, name: String) {
@@ -191,7 +200,7 @@ pub fn addPerson(addressBook : &mut AddressBook) {
             let order = inputNumber();
             match inputNumber() {
                 0 => dataInputAgain = false,
-                _ => dataInputAgain = true,
+                _ => {},
             }
 
         } else {        
@@ -232,6 +241,7 @@ pub fn addPerson(addressBook : &mut AddressBook) {
 
 
 pub fn searchPerson(addressBook : &AddressBook) {
+    println!("2. Search a personal information in the data.");
     let mut dataInputAgain = true;
     while dataInputAgain {
         println!("Please select the searching keyword.");
@@ -254,18 +264,19 @@ pub fn searchPerson(addressBook : &AddressBook) {
 }
 
 pub fn removePerson(addressBook: &mut AddressBook) {
-    let mut DataInputAgain = true;
-    while DataInputAgain {
+    println!("4. Remove one memorized personal information.");
+    let mut dataInputAgain = true;
+    while dataInputAgain {
         let name = inputName();
         let address = inputAddress();
 
         if !addressBook.is_included(&name, &address) {
             println!("This is not in the AddressBook.");
-            println!("Please input the 0 if you want to back to main menu or input any others.");
+            println!("Please input the 0 if you want to back to main menu or again input any others.");
 
             match inputNumber() {
-                0 => DataInputAgain = false,
-                _ => DataInputAgain = true,
+                0 => dataInputAgain = false,
+                _ => {},
             }
         } else {
             let rmPerson = Person::new(name, address); 
@@ -277,12 +288,12 @@ pub fn removePerson(addressBook: &mut AddressBook) {
 
                 match inputNumber() {
                     0 => {
-                        DataInputAgain = false;
+                        dataInputAgain = false;
                         orderInputAgain = false;
                     },
                     1 => {
                         addressBook.delPerson(&rmPerson);
-                        DataInputAgain = false;
+                        dataInputAgain = false;
                         orderInputAgain = false;
                     },
                     2 => {
@@ -293,6 +304,51 @@ pub fn removePerson(addressBook: &mut AddressBook) {
                     _ => println!("Please enter one vaild number (0 - 3)."),
                 }
             }
+        }
+    }
+}
+
+pub fn changeAddress (addressBook: &mut AddressBook) {
+    println!("5. Change one memorized personal information(address).");
+
+    let mut dataInputAgain = true;
+    while dataInputAgain {
+        let name = inputName();
+        let oldAddress = inputAddress();
+
+        if !addressBook.is_included(&name, &oldAddress) {
+            println!("This is not in the AddressBook.");
+            println!("Please input the 0 if you want to back to main menu or again input any others.");
+
+            match inputNumber() {
+                0 => dataInputAgain = false,
+                _ => {},
+            }
+        } else {
+            println!("Please input new address to save.");
+            let newAddress = inputAddress();
+
+            let mut orderInputAgain = true;
+            while orderInputAgain {
+                showMenu();
+                match inputNumber() {
+                    0 => {
+                        dataInputAgain = false;
+                        orderInputAgain = false;
+                    },
+                    1 => {
+                        addressBook.updateAddress(name.clone(), oldAddress.clone(), newAddress.clone());
+                        dataInputAgain = false;
+                        orderInputAgain = false;
+                    },
+                    2 => {
+                        addressBook.updateAddress(name.clone(), oldAddress.clone(), newAddress.clone());
+                        orderInputAgain = false;
+                    },
+                    3 => orderInputAgain = false,
+                    _ => println!("Please enter one vaild number (0 - 3)."),
+                }
+            } 
         }
     }
 }
@@ -309,25 +365,24 @@ fn main() {
         println!("2. Search a personal information in the data.");
         println!("3. Check the all memorized personal information.");
         println!("4. Remove one memorized personal information.");
-        println!("5. Update one memorized personal information.");
-        println!("6. Save the added address record to a file.");
-        println!("Please enter '0' if you want to quit this program.");
+        println!("5. Change one memorized personal information(address).");
+        println!("6. Save the update to a file.");
+        println!("Please input '0' if you want to quit this program.");
         println!("-----------------------------------------------------------------");   
         println!("Please input order number. (0 - 6)");
 
-        let orderNum = inputNumber();
-        match orderNum {
+        match inputNumber() {
             1 => addPerson(&mut addressBook),
             2 => searchPerson(&addressBook),
             3 => addressBook.showAllPerson(),
             4 => removePerson(&mut addressBook),
-            5 => println!("To do"),
+            5 => changeAddress(&mut addressBook),
             6 => addressBook.saveBook(fileName),
             0 => {
                 println!("Bye!!");
                 break;
             },
-            _ => println!("Please enter one vaild number (0 - 6)."),
+            _ => println!("Please input one vaild number (0 - 6)."),
         }
 
     }
