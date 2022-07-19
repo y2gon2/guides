@@ -36,10 +36,16 @@ fn ex01() {
 /// 2. stack memory & heap memory 와 관련하여
 /// 참고 사이트: https://velog.io/@hyo123/Stack%EA%B3%BCHeap-%EA%B7%B8%EB%A6%AC%EA%B3%A0-%EA%B8%B0%EB%B3%B8%EC%9E%90%EB%A3%8C%ED%98%95-%EB%B3%B5%ED%95%A9%EC%9E%90%EB%A3%8C%ED%98%95
 /// 해당 내용은 JS 에 대한 내용이기 때문에 rust 랑 차이점이 있다. 
-/// 어떤 차이점이 있을까?
+
+/// 3. 어떤 차이점이 있을까?
 /// 해당 블로그의 내용을 1번의 질문들과 연관하여 생각해 보기. 
 
-
+/// 추가 질문
+/// - 포인터는 어디에 저장될까? 
+/// - 왜 stack 은 빠르고, heap 은 빠르지 않을까? 
+/// - 좀더 정확하게 stack 에는 어떤 것을 저장하고 heap 에는 어떤것들을 저장할까?
+/// - ownership 은 stack memory 에 value 를 저장하는 type 에 대해서도 적용되긴 하지만
+///   "사실상" heap memory 관리에 좀더 관련있는게 왜 그럴까?
 
 /// 
 /// 
