@@ -206,3 +206,12 @@ pub fn changeAddress (addressBook: &mut AddressBook) {
         }
     }
 }
+
+
+#[test]
+fn a() {
+    let mut a = 1;
+    println!("{:p}", &a);
+    a = 3;
+    println!("{:p}", &a);
+}
