@@ -9,4 +9,5 @@ edition = "2021"
 members = [
     "addressbook",
     "training",
+    "stocks",
 ]
