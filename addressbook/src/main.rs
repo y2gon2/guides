@@ -47,6 +47,10 @@ fn main() {
             _ => println!("Please input one vaild number (0 - 6)."),
         }
     }
+
+
+    
+
 }
 
 

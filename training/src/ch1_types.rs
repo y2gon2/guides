@@ -31,6 +31,13 @@ fn ex01() {
     println!("size arr:{}, ve:{}", size_of_val(&arr), size_of_val(&ve));
     // size arr:400, ve:24
     // 그 이유는? 
+
+    println!("size &a: {}", size_of_val(&&a));
+    // size &a:8 
+    // 그 이유는?
+
+    let aa = "abc";
+    println!("{}", size_of_val(&aa));
 }
 
 /// 2. stack memory & heap memory 와 관련하여

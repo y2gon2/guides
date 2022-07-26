@@ -11,20 +11,22 @@ pub struct Person {
 }
 
 impl Person {
-    pub fn new(inputName: String, inputAddress: String) -> Self {
-        Person { 
+    pub fn new(inputName: String, inputAddress: String) -> Person {
+        Self { 
             name: inputName, 
             address: inputAddress,
         }
     }
+
     pub fn showPerson(&self) {
         println!("name : {},  address : {}]", &self.name, &self.address);
     }
 }
 
+
 #[derive(Debug)]
 pub struct AddressBook {
-    db: Vec<Person>,
+    db: Vec<Person>
 }
 
 impl AddressBook {
