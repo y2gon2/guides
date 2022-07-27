@@ -3,7 +3,7 @@ use std::fs::{self, OpenOptions};
 use std::collections::HashMap;
 use chrono::{Local, Date, TimeZone};
 use regex::Regex;
-use crate::structs::{PriceMap, AllStocks};
+use crate::structs::{PriceMap, AllStocks, Print};
 
 // -- file load, save--
 pub fn load_file(all_stocks: &mut AllStocks, path: &str) {
@@ -161,7 +161,7 @@ pub fn show_stock(all_stocks: &AllStocks) {
 
     match all_stocks.get(&company) {
         None => println!("This is not exist on the system."),
-        value => println!("{:?}", value.unwrap()),
+        Some(value) => value.info(),        // trait 을 이용한 list 출력 method 사용
     }
 }
 

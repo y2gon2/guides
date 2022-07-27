@@ -6,7 +6,16 @@ use crate::handlers::input_date;
 
 // new 를 제외한 모든 method 들은 기존 HashMap 함수를 실행을 단순히 연결해주고 있다. 
 // 이걸 좀더 (구조적으로) 간단하게 또는 좀더 범용적으로 만들 수 없을까?
+// -> 해당 질문이 trait 을 쓰는것과 관련된 것이였는데... 
+//    이걸 생각해보니 나도 trait 에 대해 잘못 이해하고 있는것들이 확인되서.. 
+//    간단하게 "trait 이 이렇게 생겼다"는 형태만 보여주고 
+//    자세한 설명은 동훈이한테 듣도록.. (나도 동훈이 문제 풀이 해야 함. ;; ㅋㅋ)
 
+// (기존 method 들을 적용하려니 좋은 예가 떠오르지않아서...)
+// triat 을 이용해서 print 하는 새로운 method 를 정의해서 사용해 보면.. 
+// (여기선는 그냥 이렇게 생겼구나 정도만 확인하고 실제 왜 쎠야 하는지는 동훈 사부에게 전수받도록)
+// 65 번 줄부터 trait 내용
+ 
 #[derive(Debug, Clone)]
 pub struct PriceMap {
     pub daily_prices: HashMap<Date<Local>, f32>,
@@ -52,6 +61,32 @@ impl AllStocks{
         return self.data.get_mut(company)
     }
 }
+
+// -- trait 맛보기 --
+pub trait Print {
+    fn info(&self);
+}
+
+// trait 을 사용하여 특정 종목의 전체 data - price 를 보고 싶다면,
+impl Print for PriceMap {
+    fn info(&self) {
+        for (date, price) in &self.daily_prices {
+            print!("date : {:}, price: {:} \n", date, price);
+        }
+        println!("");
+    }
+}
+
+// tait 을 사용하여 현재 
+impl Print for AllStocks {
+    fn info(&self) {
+        for (company, _) in &self.data {
+            print!("{}\t", company);
+        }
+    }
+}
+
+// -------------------
 
 
 
